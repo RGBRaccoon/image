@@ -14,11 +14,23 @@
 #
 # ============================================================
 
+# [현재] 소프트웨어 인코더 - 동작 확인용
+# nvvidconv/nvv4l2h264enc가 컨테이너 안에서 인식되지 않을 때 사용
 gst-launch-1.0 -v \
   v4l2src device=/dev/video4 ! \
   "video/x-raw,width=640,height=480,framerate=30/1" ! \
-  nvvidconv ! \
-  nvv4l2h264enc maxperf-enable=1 bitrate=1000000 ! \
+  videoconvert ! \
+  x264enc tune=zerolatency speed-preset=ultrafast bitrate=1000 ! \
   h264parse config-interval=1 ! \
   rtph264pay pt=96 ! \
   rtspclientsink location=rtsp://127.0.0.1:8554/stream protocols=tcp
+
+# [나중에] 하드웨어 인코더 - 동작 확인 후 위 파이프라인과 교체
+# gst-launch-1.0 -v \
+#   v4l2src device=/dev/video4 ! \
+#   "video/x-raw,width=640,height=480,framerate=30/1" ! \
+#   nvvidconv ! \
+#   nvv4l2h264enc maxperf-enable=1 bitrate=1000000 ! \
+#   h264parse config-interval=1 ! \
+#   rtph264pay pt=96 ! \
+#   rtspclientsink location=rtsp://127.0.0.1:8554/stream protocols=tcp
