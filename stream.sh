@@ -1,36 +1,19 @@
 #!/bin/bash
 # ============================================================
-# GStreamer 파이프라인: RealSense → H.264 인코딩 → MediaMTX
+# ffmpeg: RealSense(/dev/video4) → H.264 → MediaMTX로 push
 # ============================================================
 #
-# 파이프라인 흐름:
-#   v4l2src           : /dev/video4 에서 카메라 영상 읽기
-#   video/x-raw       : 해상도/fps 지정 (640x480, 30fps)
-#   nvvidconv         : 색공간 변환 (Jetson 하드웨어)
-#   nvv4l2h264enc     : H.264 인코딩 (Jetson 하드웨어 인코더)
-#   h264parse         : H.264 스트림 파싱/정리
-#   rtph264pay        : RTP 패킷으로 포장 (네트워크 전송용)
-#   rtspclientsink    : MediaMTX RTSP 서버로 push
+#   -f v4l2            : Linux 카메라 입력 방식
+#   -i /dev/video4     : 카메라 장치
+#   -vcodec libx264    : 소프트웨어 H.264 인코더
+#   -preset ultrafast  : 인코딩 속도 최우선 (지연 최소화)
+#   -tune zerolatency  : 실시간 스트리밍용 튜닝
+#   -b:v 1000k         : 비트레이트 1Mbps
+#   -f rtsp            : RTSP 포맷으로 출력
+#   -rtsp_transport tcp: TCP로 전송 (UDP보다 안정적)
 #
 # ============================================================
 
-# [현재] 소프트웨어 인코더 - 동작 확인용
-# nvvidconv/nvv4l2h264enc가 컨테이너 안에서 인식되지 않을 때 사용
-gst-launch-1.0 -v \
-  v4l2src device=/dev/video4 ! \
-  "video/x-raw,width=640,height=480,framerate=30/1" ! \
-  videoconvert ! \
-  x264enc tune=zerolatency speed-preset=ultrafast bitrate=1000 ! \
-  h264parse config-interval=1 ! \
-  rtph264pay pt=96 ! \
-  rtspclientsink location=rtsp://127.0.0.1:8554/stream protocols=tcp
-
-# [나중에] 하드웨어 인코더 - 동작 확인 후 위 파이프라인과 교체
-# gst-launch-1.0 -v \
-#   v4l2src device=/dev/video4 ! \
-#   "video/x-raw,width=640,height=480,framerate=30/1" ! \
-#   nvvidconv ! \
-#   nvv4l2h264enc maxperf-enable=1 bitrate=1000000 ! \
-#   h264parse config-interval=1 ! \
-#   rtph264pay pt=96 ! \
-#   rtspclientsink location=rtsp://127.0.0.1:8554/stream protocols=tcp
+ffmpeg -f v4l2 -i /dev/video4 \
+  -vcodec libx264 -preset ultrafast -tune zerolatency -b:v 1000k \
+  -f rtsp -rtsp_transport tcp rtsp://127.0.0.1:8554/stream
