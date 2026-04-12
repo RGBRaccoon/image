@@ -16,15 +16,17 @@ RUN apt-get update && \
     apt-get install -y software-properties-common && \
     add-apt-repository universe && \
     apt-get update && \
-    apt-get install -y ffmpeg wget && \
+    apt-get install -y ffmpeg wget curl jq && \
     rm -rf /var/lib/apt/lists/*
 
 # ============================================================
 # MediaMTX 설치 (ARM64 바이너리)
+# GitHub API로 최신 버전 자동 감지 → arm64v8 바이너리 다운로드
 # ============================================================
-ARG MEDIAMTX_VERSION=v1.9.1
-RUN wget -qO /tmp/mediamtx.tar.gz \
-    "https://github.com/bluenviron/mediamtx/releases/download/${MEDIAMTX_VERSION}/mediamtx_${MEDIAMTX_VERSION}_linux_arm64v8.tar.gz" \
+RUN DOWNLOAD_URL=$(curl -s https://api.github.com/repos/bluenviron/mediamtx/releases/latest \
+        | jq -r '.assets[] | select(.name | contains("linux_arm64v8")) | .browser_download_url') \
+    && echo "Downloading: $DOWNLOAD_URL" \
+    && wget -O /tmp/mediamtx.tar.gz "$DOWNLOAD_URL" \
     && tar -xzf /tmp/mediamtx.tar.gz -C /usr/local/bin mediamtx \
     && rm /tmp/mediamtx.tar.gz
 
