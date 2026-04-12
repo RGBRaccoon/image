@@ -14,6 +14,7 @@
 #
 # ============================================================
 
-ffmpeg -f v4l2 -i /dev/video4 \
+ffmpeg \
+  -f v4l2 -framerate 30 -video_size 640x480 -i /dev/video4 \
   -vcodec libx264 -preset ultrafast -tune zerolatency -b:v 1000k \
   -f rtsp -rtsp_transport tcp rtsp://127.0.0.1:8554/stream
