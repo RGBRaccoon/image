@@ -10,7 +10,7 @@
 # JetPack 5.x → r35.x.x
 # JetPack 6.x → r36.x.x  ← 현재 환경: r36.5.0 (JetPack 6.2)
 #
-FROM nvcr.io/nvidia/l4t-base:r36.5.0
+FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
