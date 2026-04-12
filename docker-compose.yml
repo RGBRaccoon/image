@@ -1,0 +1,9 @@
+services:
+  rtsp-server:
+    build: .
+    runtime: nvidia          # Jetson 하드웨어 인코더 접근용
+    devices:
+      - /dev/video4:/dev/video4   # 카메라를 컨테이너 안으로 전달
+    ports:
+      - "8554:8554"          # RTSP 포트 외부 노출
+    restart: unless-stopped  # 컨테이너 죽으면 자동 재시작
